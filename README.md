@@ -14,7 +14,13 @@ Tout tient dans `index.html`. Les données sont stockées dans le navigateur (In
 - **Terminer** : cocher. Les tâches terminées descendent dans « Terminées (n) », repliable, avec « Effacer ».
 - **Supprimer** : icône corbeille (liste) ou ✕ (tâche). Toujours annulable quelques secondes (ou `Ctrl+Z`).
 - **Onglets** : `Ctrl+1`, `Ctrl+2`, `Ctrl+3`.
-- **Sauvegarder / Restaurer** : export/import d'un fichier `.json` (utile pour changer de PC ou en sécurité).
+- **Guide** : les astuces principales sont affichées en fond d'écran ; le guide complet s'ouvre avec le bouton « Guide » ou `F1`.
+- **Thème** : bouton soleil / lune pour passer du thème clair au thème sombre (mémorisé).
+- **Date et rappel** : icône calendrier au survol d'une tâche (raccourcis Aujourd'hui / Demain / Lundi / +1 semaine, heure facultative, rappel de « à l'heure » à « 1 semaine avant » ; sans heure, le rappel se base sur 8h00).
+- **Cloche** : compte les rappels arrivés et liste toutes les échéances de tous les onglets (rappels, en retard, aujourd'hui, demain, 7 jours, plus tard). « Vu » arrête un rappel ; un clic sur un élément ouvre la tâche.
+- **Bulles des onglets** : rouge = urgentes, orange = importantes, gris = normales (tâches en cours).
+- **Options** (roue dentée) : notifications Windows (activables / désactivables), thème, astuces en fond d'écran, Sauvegarder / Restaurer (fichier `.json`).
+- Les notifications Windows ne fonctionnent que sur la version en ligne / installée (pas en ouvrant le fichier en local).
 
 ## Utilisation locale
 Double-cliquer sur `index.html`. (L'installation en application nécessite de passer par GitHub Pages, voir ci-dessous.)

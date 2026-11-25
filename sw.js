@@ -1,6 +1,6 @@
 // Service worker : permet l'installation et le fonctionnement hors ligne.
 // Pensez à changer VERSION à chaque mise à jour de l'application.
-const VERSION = 'suidepro-v2';
+const VERSION = 'suidepro-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/favicon-32.png'];
 

@@ -10,21 +10,36 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script>
+try{var t=localStorage.getItem('suidepro-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;}catch(e){}
+</script>
 <style>
 :root{
-  --bg:#EEF1F5; --panel:#fff; --text:#1F2937; --muted:#6B7280; --line:#E5E7EB;
-  --accent:#2563EB; --imp:#F59E0B; --urg:#EF4444; --radius:12px;
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --bg:#EEF1F5; --panel:#fff; --text:#1F2937; --muted:#6B7280; --faint:#9CA3AF; --line:#E5E7EB; --line2:#CDD3DA;
+  --hover:#F3F4F6; --task:#F9FAFB; --input:#FAFBFC; --done:#fff; --p0:#D7DCE2;
+  --p1bg:#FFF8E6; --p2bg:#FEF0F0; --header:#1F2937; --pop:#fff; --kbd:#fff; --kbdline:#D1D5DB;
+  --today-fg:#B45309; --late-fg:#DC2626;
+  --accent:#2563EB; --imp:#F59E0B; --urg:#EF4444; --radius:12px; --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121419; --panel:#1C1F26; --text:#E6E8EC; --muted:#9AA1AD; --faint:#6B7280; --line:#2B2F38; --line2:#3A3F4A;
+  --hover:#2A2E37; --task:#242830; --input:#181B21; --done:#1C1F26; --p0:#3A3F4A;
+  --p1bg:rgba(245,158,11,.13); --p2bg:rgba(239,68,68,.15); --header:#0B0D11; --pop:#252932; --kbd:#2A2E37; --kbdline:#3F4550;
+  --today-fg:#FBBF24; --late-fg:#F87171;
+  --accent:#3B82F6; --shadow:0 1px 3px rgba(0,0,0,.4); color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden;font-size:14px;transition:background .2s}
 button{font:inherit}
+kbd{display:inline-block;font:600 11px/1 ui-monospace,Consolas,monospace;padding:3px 6px;border-radius:5px;background:var(--kbd);border:1px solid var(--kbdline);border-bottom-width:2px;color:var(--text);white-space:nowrap}
 
 /* ---------- En-tête ---------- */
-header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#1F2937;color:#fff;flex:none}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--header);color:#fff;flex:none;position:relative;z-index:5}
 .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;margin-right:10px;white-space:nowrap}
 .brand svg{width:26px;height:26px;flex:none}
+.brand small{font-weight:500;color:#9CA3AF;margin-left:4px}
 #tabs{display:flex;gap:4px;background:rgba(255,255,255,.08);padding:4px;border-radius:10px}
 .tab{border:0;background:transparent;color:#CBD5E1;padding:8px 16px;border-radius:7px;font-weight:600;cursor:pointer;display:flex;gap:8px;align-items:center;transition:background .15s,color .15s}
 .tab:hover{color:#fff;background:rgba(255,255,255,.1)}
@@ -33,63 +48,90 @@ header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#1F
 .tab.active .badge{background:#E5E7EB}
 .tab .badge.hot{background:var(--urg);color:#fff}
 .tab.drop{outline:2px dashed #fff;outline-offset:2px;background:rgba(255,255,255,.2);color:#fff}
-.hbtn{border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;background:rgba(255,255,255,.1);color:#E5E7EB;white-space:nowrap}
+.hbtn{border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;background:rgba(255,255,255,.1);color:#E5E7EB;white-space:nowrap;display:flex;align-items:center;gap:6px}
 .hbtn:hover{background:rgba(255,255,255,.2)}
 .hbtn.primary{background:var(--accent);color:#fff}
-.hbtn.primary:hover{background:#1D4ED8}
+.hbtn.primary:hover{filter:brightness(.9)}
+.hbtn.icon{padding:8px 10px}
+.hbtn svg{width:17px;height:17px}
 .spacer{flex:1}
 #saveState{font-size:12px;color:#9CA3AF;min-width:95px;text-align:right;transition:color .3s}
 #saveState.ok{color:#6EE7B7}
 #saveState.err{color:#FCA5A5}
 
+/* ---------- Bulles d'onglets ---------- */
+.tab{padding:7px 10px 7px 14px}
+.bubbles{display:flex;gap:3px}
+.bub{font-size:11px;font-weight:700;min-width:20px;height:19px;padding:0 6px;border-radius:10px;display:grid;place-items:center;color:#fff;line-height:1}
+.bub.r{background:var(--urg)} .bub.o{background:var(--imp)}
+.bub.g{background:rgba(255,255,255,.2);color:#E5E7EB}
+.tab.active .bub.g{background:#E5E7EB;color:#374151}
+.bub.zero{opacity:.45}
+/* ---------- Cloche ---------- */
+#btnBell{position:relative}
+#bellBadge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--urg);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--header)}
+#bellBadge[hidden]{display:none}
+#btnBell.ringing svg{animation:ring 1.2s ease-in-out 2}
+@keyframes ring{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}}
+/* ---------- Pied de page ---------- */
+footer{flex:none;text-align:center;font-size:11.5px;color:var(--faint);padding:5px 10px 7px;position:relative;z-index:1}
+
+/* ---------- Guide en fond d'écran ---------- */
+#bgGuide{position:fixed;right:22px;bottom:36px;z-index:0;width:390px;color:var(--muted);pointer-events:none;user-select:none}
+#bgGuide h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+.grow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.grow b{font-weight:600;color:var(--text);opacity:.8}
+.grow .how{text-align:right;display:flex;gap:4px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+#bgGuide .foot{margin-top:8px;font-size:12px;color:var(--faint)}
+
 /* ---------- Tableau ---------- */
-main{flex:1;display:flex;gap:16px;padding:18px;overflow-x:auto;overflow-y:hidden;align-items:flex-start}
+main{flex:1;display:flex;gap:16px;padding:18px;overflow-x:auto;overflow-y:hidden;align-items:flex-start;position:relative;z-index:1}
 .col{flex:0 0 300px;max-height:100%;display:flex;flex-direction:column;background:var(--panel);border-radius:var(--radius);
-  box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);border-top:7px solid var(--c);overflow:hidden}
+  box-shadow:var(--shadow);border-top:7px solid var(--c);overflow:hidden}
 .col.dragging{opacity:.35}
 .col-head{display:flex;align-items:center;gap:4px;padding:8px 8px 4px 4px;cursor:grab}
-.grip{color:#B6BCC6;padding:4px 2px;user-select:none;font-size:15px;line-height:1}
+.grip{color:var(--faint);padding:4px 2px;user-select:none;font-size:15px;line-height:1}
 .col-title{flex:1;font-weight:700;font-size:15px;padding:4px 6px;border-radius:6px;outline:none;word-break:break-word;min-width:20px}
-.col-title:hover{background:#F3F4F6}
-.col-title:focus{background:#fff;box-shadow:0 0 0 2px var(--c);cursor:text}
+.col-title:hover{background:var(--hover)}
+.col-title:focus{background:var(--panel);box-shadow:0 0 0 2px var(--c);cursor:text}
 .ibtn{width:28px;height:28px;border:0;background:transparent;border-radius:6px;cursor:pointer;color:var(--muted);display:grid;place-items:center;flex:none;padding:0}
-.ibtn:hover{background:#F3F4F6;color:var(--text)}
-.ibtn.danger:hover{background:#FEE2E2;color:var(--urg)}
+.ibtn:hover{background:var(--hover);color:var(--text)}
+.ibtn.danger:hover{background:rgba(239,68,68,.14);color:var(--urg)}
 .ibtn svg{width:16px;height:16px}
 .swatch{width:16px;height:16px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
 .stats{display:flex;align-items:center;gap:8px;padding:0 12px 8px}
-.progress{flex:1;height:5px;background:#F1F3F5;border-radius:3px;overflow:hidden}
+.progress{flex:1;height:5px;background:var(--hover);border-radius:3px;overflow:hidden}
 .progress i{display:block;height:100%;background:var(--c);transition:width .3s}
 .meta{font-size:12px;color:var(--muted);white-space:nowrap}
-.add{margin:0 10px 10px;padding:9px 10px;border:1px dashed #CDD2D9;border-radius:8px;font:inherit;outline:none;background:#FAFBFC;color:var(--text)}
-.add::placeholder{color:#9CA3AF}
+.add{margin:0 10px 10px;padding:9px 10px;border:1px dashed var(--line2);border-radius:8px;font:inherit;outline:none;background:var(--input);color:var(--text)}
+.add::placeholder{color:var(--faint)}
 .add:hover{border-color:var(--c)}
-.add:focus{border:1px solid var(--c);background:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent)}
+.add:focus{border:1px solid var(--c);background:var(--panel);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent)}
 .body{overflow-y:auto;padding:0 10px 10px;flex:1;min-height:30px}
 .tasks{display:flex;flex-direction:column;gap:6px;min-height:6px}
-.hint{font-size:12px;color:#A0A7B2;text-align:center;padding:10px 4px}
+.hint{font-size:12px;color:var(--faint);text-align:center;padding:10px 4px}
 
 /* ---------- Tâches ---------- */
-.task{display:flex;align-items:flex-start;gap:8px;padding:8px 6px 8px 8px;border-radius:8px;background:#F9FAFB;border:1px solid var(--line);
-  border-left:4px solid #D7DCE2;cursor:grab;transition:background .15s,opacity .2s,transform .2s}
-.task:hover{border-color:#CDD3DA;border-left-color:#C3C9D1}
-.task.p1{border-left-color:var(--imp);background:#FFF8E6}
-.task.p2{border-left-color:var(--urg);background:#FEF0F0}
+.task{display:flex;align-items:flex-start;gap:8px;padding:8px 6px 8px 8px;border-radius:8px;background:var(--task);border:1px solid var(--line);
+  border-left:4px solid var(--p0);cursor:grab;transition:background .15s,opacity .2s,transform .2s}
+.task:hover{border-color:var(--line2)}
+.task.p1{border-left-color:var(--imp);background:var(--p1bg)}
+.task.p2{border-left-color:var(--urg);background:var(--p2bg)}
 .task.dragging{opacity:.3}
 .task.checking{opacity:.4;transform:translateX(6px)}
 .task input[type=checkbox]{width:18px;height:18px;margin:1px 0 0;accent-color:var(--c);cursor:pointer;flex:none}
-.prio{width:18px;height:18px;border-radius:50%;border:2px solid #CBD1D8;background:#fff;cursor:pointer;flex:none;margin-top:1px;padding:0;transition:transform .1s}
+.prio{width:18px;height:18px;border-radius:50%;border:2px solid var(--line2);background:var(--panel);cursor:pointer;flex:none;margin-top:1px;padding:0;transition:transform .1s}
 .prio:hover{transform:scale(1.15)}
 .p1 .prio{background:var(--imp);border-color:var(--imp)}
 .p2 .prio{background:var(--urg);border-color:var(--urg)}
 .text{flex:1;line-height:1.4;word-break:break-word;outline:none;cursor:text;min-height:20px;white-space:pre-wrap;padding:0 2px;border-radius:4px}
-.text:hover{background:rgba(0,0,0,.03)}
-.text[contenteditable="true"],.text[contenteditable="plaintext-only"]{background:#fff;box-shadow:0 0 0 2px var(--c);cursor:text}
+.text:hover{background:rgba(127,127,127,.08)}
+.text[contenteditable="true"],.text[contenteditable="plaintext-only"]{background:var(--panel);box-shadow:0 0 0 2px var(--c);cursor:text}
 .task .ibtn{width:22px;height:22px;opacity:0}
 .task:hover .ibtn{opacity:1}
 .task .ibtn svg{width:13px;height:13px}
-.task.done{background:#fff;cursor:default;border-left-color:#E5E7EB}
-.task.done .text{text-decoration:line-through;color:#9CA3AF;cursor:default}
+.task.done{background:var(--done);cursor:default;border-left-color:var(--line)}
+.task.done .text{text-decoration:line-through;color:var(--faint);cursor:default}
 .task.done .text:hover{background:none}
 .placeholder{height:36px;border-radius:8px;border:2px dashed var(--c);background:color-mix(in srgb,var(--c) 8%,transparent);flex:none}
 
@@ -99,48 +141,123 @@ main{flex:1;display:flex;gap:16px;padding:18px;overflow-x:auto;overflow-y:hidden
 .done-toggle .chev{display:inline-block;width:14px;transition:transform .15s}
 .done-toggle.open .chev{transform:rotate(90deg)}
 .linkbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px}
-.linkbtn:hover{background:#FEE2E2;color:var(--urg)}
+.linkbtn:hover{background:rgba(239,68,68,.14);color:var(--urg)}
 .donelist{display:flex;flex-direction:column;gap:4px;margin-top:4px}
 
-.addcol{flex:0 0 240px;height:110px;border:2px dashed #C5CCD6;border-radius:var(--radius);background:transparent;color:var(--muted);font-weight:600;cursor:pointer;font-size:15px}
-.addcol:hover{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.04)}
-.empty{margin:auto;text-align:center;color:var(--muted);max-width:420px}
+.addcol{flex:0 0 240px;height:110px;border:2px dashed var(--line2);border-radius:var(--radius);background:transparent;color:var(--muted);font-weight:600;cursor:pointer;font-size:15px}
+.addcol:hover{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.05)}
+.empty{margin:12vh 0 0 6vw;color:var(--muted);max-width:420px}
 .empty h2{color:var(--text);font-size:20px;margin:0 0 8px}
 .empty p{margin:0 0 18px;line-height:1.5}
 .bigbtn{border:0;border-radius:10px;padding:12px 22px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
-.bigbtn:hover{background:#1D4ED8}
+.bigbtn:hover{filter:brightness(.9)}
 
-/* ---------- Palette & toast ---------- */
-.pop{position:fixed;display:none;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:8px;gap:6px;z-index:50;grid-template-columns:repeat(4,28px)}
+/* ---------- Dates ---------- */
+.tmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.chip{align-self:flex-start;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--hover);color:var(--muted);border:0;cursor:pointer;line-height:18px}
+.chip:hover{filter:brightness(.95)}
+.chip svg{width:12px;height:12px;flex:none}
+.chip.today{background:rgba(245,158,11,.18);color:var(--today-fg)}
+.chip.late{background:rgba(239,68,68,.15);color:var(--late-fg)}
+.chip.ring{background:var(--urg);color:#fff}
+.task.done .chip{background:transparent;color:var(--faint);cursor:default;padding-left:0}
+.task.flash{animation:flash .7s ease-in-out 3}
+@keyframes flash{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 3px var(--c)}}
+#datepop{position:fixed;display:none;z-index:55;background:var(--pop);color:var(--text);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.28);padding:14px;width:290px}
+#datepop.open{display:block}
+#datepop label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:10px}
+#datepop label small{font-weight:400}
+#datepop input,#datepop select{display:block;width:100%;margin-top:4px;padding:7px 8px;border-radius:7px;border:1px solid var(--line2);background:var(--input);color:var(--text);font:inherit}
+.dp-quick{display:flex;gap:5px;flex-wrap:wrap}
+.dp-quick button{border:1px solid var(--line2);background:var(--panel);color:var(--text);border-radius:14px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer}
+.dp-quick button:hover{border-color:var(--accent);color:var(--accent)}
+.dp-note{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}
+.dp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.bigbtn.small{padding:7px 18px;font-size:14px}
+/* ---------- Panneau des échéances ---------- */
+#drawer{position:fixed;top:0;right:0;bottom:0;width:390px;max-width:92vw;background:var(--panel);color:var(--text);box-shadow:-10px 0 34px rgba(0,0,0,.2);
+  transform:translateX(105%);transition:transform .22s ease;z-index:45;display:flex;flex-direction:column}
+#drawer.open{transform:none}
+.dr-head{display:flex;align-items:center;gap:8px;padding:16px 16px 10px;border-bottom:1px solid var(--line)}
+.dr-head h2{flex:1;margin:0;font-size:17px}
+.dr-body{flex:1;overflow-y:auto;padding:6px 12px 16px}
+.dr-body h4{margin:14px 4px 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);display:flex;gap:6px;align-items:center}
+.dr-body h4.r{color:var(--urg)} .dr-body h4.o{color:var(--today-fg)}
+.ditem{display:flex;gap:10px;align-items:flex-start;padding:9px 8px;border-radius:9px;cursor:pointer;border-left:4px solid var(--c)}
+.ditem:hover{background:var(--hover)}
+.ditem .dmain{flex:1;min-width:0}
+.ditem .dt{font-weight:600;word-break:break-word}
+.ditem .ds{font-size:12px;color:var(--muted);margin-top:2px}
+.ditem .ack{border:0;background:var(--urg);color:#fff;border-radius:7px;padding:4px 10px;font-weight:700;font-size:12px;cursor:pointer;flex:none}
+.ditem .ack:hover{filter:brightness(.9)}
+.dr-empty{color:var(--muted);text-align:center;padding:40px 16px;line-height:1.5}
+.dr-foot{border-top:1px solid var(--line);padding:10px 16px;font-size:12px;color:var(--muted)}
+.dr-foot button{border:0;background:none;color:var(--accent);cursor:pointer;font:inherit;font-weight:600;padding:0}
+/* ---------- Options ---------- */
+.opt{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.opt .od{flex:1}
+.opt .od b{display:block}
+.opt .od span{font-size:13px;color:var(--muted)}
+.opt .od span.warn{color:var(--late-fg)}
+.seg{display:flex;background:var(--hover);border-radius:8px;padding:3px;gap:3px}
+.seg button{border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600}
+.seg button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+.obtn{border:1px solid var(--line2);background:var(--panel);color:var(--text);padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.obtn:hover{border-color:var(--accent);color:var(--accent)}
+.switch{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:12px;background:var(--line2);position:relative;cursor:pointer;transition:background .2s;flex:none;margin:0}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch:checked{background:var(--accent)}
+.switch:checked::after{left:21px}
+
+/* ---------- Palette, toast, fenêtres ---------- */
+.pop{position:fixed;display:none;background:var(--pop);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:8px;gap:6px;z-index:50;grid-template-columns:repeat(4,28px)}
 .pop.open{display:grid}
-.sw{width:28px;height:28px;border-radius:50%;border:3px solid #fff;cursor:pointer;box-shadow:0 0 0 1px #E5E7EB}
-.sw.on,.sw:hover{box-shadow:0 0 0 2px #111827}
+.sw{width:28px;height:28px;border-radius:50%;border:3px solid var(--pop);cursor:pointer;box-shadow:0 0 0 1px var(--line)}
+.sw.on,.sw:hover{box-shadow:0 0 0 2px var(--text)}
 #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#111827;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;
-  display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:.2s;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:.2s;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 #toast button{border:0;background:#374151;color:#93C5FD;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer}
 #toast button:hover{background:#4B5563}
-.help{position:fixed;right:18px;bottom:14px;font-size:12px;color:#9AA3AE}
+.modal{position:fixed;inset:0;background:rgba(10,12,16,.45);display:none;place-items:center;z-index:70}
+.modal.open{display:grid}
+.modal .card{background:var(--panel);color:var(--text);border-radius:14px;width:min(560px,92vw);max-height:86vh;overflow:auto;padding:22px 26px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.modal h2{margin:0 0 4px;font-size:19px}
+.modal .sub{color:var(--muted);margin:0 0 14px}
+.modal h4{margin:16px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+.modal .grow{font-size:14px;padding:7px 0}
+.modal .grow b{opacity:1}
+.modal .grow span.d{color:var(--muted);font-size:13px}
+.modal .close{float:right}
+.legend{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px}
 </style>
 </head>
 <body>
 <header>
   <div class="brand">
     <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#374151"/><rect x="5" y="5" width="6" height="21" rx="1.5" fill="#fff"/><rect x="5" y="5" width="6" height="3" fill="#3B82F6"/><rect x="13" y="5" width="6" height="15" rx="1.5" fill="#fff"/><rect x="13" y="5" width="6" height="3" fill="#F59E0B"/><rect x="21" y="5" width="6" height="18" rx="1.5" fill="#fff"/><rect x="21" y="5" width="6" height="3" fill="#10B981"/></svg>
-    <span>Suidepro <small style="font-weight:500;color:#9CA3AF;margin-left:4px">Suivi de production</small></span>
+    <span>Suidepro <small>Suivi de production</small></span>
   </div>
   <nav id="tabs"></nav>
   <button id="addList" class="hbtn primary" title="Nouvelle liste (Alt+N)">+ Nouvelle liste</button>
   <div class="spacer"></div>
   <span id="saveState"></span>
-  <button id="btnExport" class="hbtn" title="Télécharger une copie de toutes les données (.json)">Sauvegarder</button>
-  <button id="btnImport" class="hbtn" title="Recharger une sauvegarde (.json)">Restaurer</button>
+  <button id="btnBell" class="hbtn icon" title="Échéances et rappels"></button>
+  <button id="btnGuide" class="hbtn" title="Guide des fonctions et raccourcis (F1 ou ?)">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M7.7 7.6a2.4 2.4 0 1 1 3.3 2.2c-.6.3-1 .8-1 1.5v.4"/><circle cx="10" cy="14.6" r=".4" fill="currentColor"/></svg>Guide</button>
+  <button id="btnTheme" class="hbtn icon" title="Basculer thème clair / sombre"></button>
+  <button id="btnOptions" class="hbtn icon" title="Options (notifications, thème, sauvegarde)"></button>
   <input type="file" id="fileImport" accept=".json,application/json" hidden>
 </header>
 <main id="board"></main>
+<footer id="footer"></footer>
 <div id="palette" class="pop"></div>
 <div id="toast"></div>
-<div class="help">Glisser pour réorganiser · clic sur un texte pour le modifier · « ! » ou « !! » en début de tâche = important / urgent</div>
+<aside id="bgGuide" aria-hidden="true"></aside>
+<div id="guide" class="modal" role="dialog" aria-modal="true" aria-label="Guide"><div class="card"></div></div>
+<div id="options" class="modal" role="dialog" aria-modal="true" aria-label="Options"><div class="card"></div></div>
+<div id="datepop"></div>
+<aside id="drawer" aria-label="Échéances"></aside>
 
 <script>
 (() => {
@@ -154,7 +271,16 @@ const TABS = [
 ];
 const COLORS = ['#3B82F6','#F59E0B','#10B981','#8B5CF6','#EC4899','#14B8A6','#EF4444','#64748B'];
 const PRIO = ['Normale', 'Importante', 'Urgente'];
+const APP_VERSION = '01.00';
+const AUTHOR = 'Leroy Aurélien';
+const REMINDERS = [[null, 'Aucun rappel'], [0, "À l'heure prévue"], [15, '15 min avant'], [60, '1 h avant'], [1440, 'La veille'], [2880, '2 jours avant'], [10080, '1 semaine avant']];
+const DEFAULT_HOUR = '08:00'; // heure utilisée pour les rappels d'une date sans heure
 const ICON = {
+  bell:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8a5 5 0 0 1 10 0c0 4 1.6 5.5 1.6 5.5H3.4S5 12 5 8z"/><path d="M8.3 16.5a1.8 1.8 0 0 0 3.4 0"/></svg>',
+  cal:   '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 8.5h14M7 2.8v3.4M13 2.8v3.4"/></svg>',
+  gear:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  sun:   '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.8v2M10 16.2v2M1.8 10h2M16.2 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>',
+  moon:  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M16.5 12.3A7 7 0 0 1 7.7 3.5a7 7 0 1 0 8.8 8.8z"/></svg>',
   sort:  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.5v11M2.5 5 5 2.5 7.5 5M11 13.5v-11M8.5 11l2.5 2.5 2.5-2.5"/></svg>',
   trash: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.8 6.5v4.5M9.2 6.5v4.5"/></svg>',
   x:     '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>'
@@ -184,14 +310,20 @@ const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('suivi-producti
 const mkList = (title, i) => ({ id: uid(), title, color: COLORS[i % COLORS.length], showDone: false, tasks: [] });
 const defaultState = () => ({ v: 1, activeTab: 'production', tabs: { production: [mkList('Ligne 1', 0)], social: [], todo: [] } });
 function normalize(s) {
-  if (!s || typeof s !== 'object' || !s.tabs) return defaultState();
+  if (!s || typeof s !== 'object' || !s.tabs) s = defaultState();
   TABS.forEach(t => { if (!Array.isArray(s.tabs[t.id])) s.tabs[t.id] = []; });
   if (!TABS.some(t => t.id === s.activeTab)) s.activeTab = 'production';
   Object.values(s.tabs).forEach(arr => arr.forEach(l => {
     l.id ||= uid(); l.title ??= 'Sans titre'; l.color ||= COLORS[0]; l.showDone = !!l.showDone;
     l.tasks = Array.isArray(l.tasks) ? l.tasks : [];
-    l.tasks.forEach(t => { t.id ||= uid(); t.text = String(t.text ?? ''); t.done = !!t.done; t.prio = [0,1,2].includes(t.prio) ? t.prio : 0; });
+    l.tasks.forEach(t => {
+      t.id ||= uid(); t.text = String(t.text ?? ''); t.done = !!t.done; t.prio = [0,1,2].includes(t.prio) ? t.prio : 0;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(t.due || '')) { delete t.due; delete t.time; t.remind = null; }
+      if (!/^\d{2}:\d{2}$/.test(t.time || '')) delete t.time;
+      t.remind = REMINDERS.some(x => x[0] === t.remind) ? t.remind : null;
+    });
   }));
+  s.settings = Object.assign({ notify: true, tips: true }, s.settings || {});
   return s;
 }
 const curLists = () => state.tabs[state.activeTab];
@@ -238,7 +370,7 @@ function save() { savePending = true; clearTimeout(saveTimer); saveTimer = setTi
 function commit() { save(); render(); }
 document.addEventListener('visibilitychange', () => { if (document.hidden && savePending) writeNow(); });
 window.addEventListener('pagehide', () => { if (savePending) writeNow(); });
-if (bc) bc.onmessage = async () => { if (isEditing() || drag) return; const s = await dbGet(); if (s) { state = normalize(s); render(); } };
+if (bc) bc.onmessage = async () => { if (isEditing() || drag) return; const s = await dbGet(); if (s) { state = normalize(s); if (state.theme) applyTheme(state.theme); renderGuides(); render(); } };
 
 /* ============ Annulation & toast ============ */
 function snapshot() { undoSnap = JSON.stringify(state); }
@@ -293,9 +425,9 @@ function toggleDone(l, t, row) {
 }
 function sortByPrio(l) {
   snapshot();
-  const open = openTasks(l).map((t, i) => [t, i]).sort((a, b) => (b[0].prio - a[0].prio) || (a[1] - b[1])).map(x => x[0]);
+  const open = openTasks(l).map((t, i) => [t, i]).sort((a, b) => (b[0].prio - a[0].prio) || ((dueAt(a[0]) || Infinity) - (dueAt(b[0]) || Infinity)) || (a[1] - b[1])).map(x => x[0]);
   l.tasks = open.concat(l.tasks.filter(t => t.done));
-  commit(); toast('Liste triée : urgent en haut', true);
+  commit(); toast('Liste triée : urgent en haut, puis par date', true);
 }
 function clearDone(l) {
   const n = l.tasks.length - openTasks(l).length; if (!n) return;
@@ -318,18 +450,17 @@ function moveListToTab(listId, tabId) {
 }
 
 /* ============ Rendu ============ */
-function render() { renderTabs(); renderBoard(); }
+function render() { renderTabs(); renderBoard(); renderBell(); if (drawerEl.classList.contains('open')) renderDrawer(); }
 
 function renderTabs() {
   tabsEl.innerHTML = '';
   TABS.forEach((t, i) => {
-    const lists = state.tabs[t.id];
-    const open = lists.reduce((n, l) => n + openTasks(l).length, 0);
-    const urgent = lists.some(l => l.tasks.some(x => !x.done && x.prio === 2));
+    const c = [0, 0, 0];
+    state.tabs[t.id].forEach(l => l.tasks.forEach(x => { if (!x.done) c[x.prio]++; }));
     const b = el('button', 'tab' + (state.activeTab === t.id ? ' active' : ''));
-    b.innerHTML = `<span></span><span class="badge${urgent ? ' hot' : ''}">${open}</span>`;
+    b.innerHTML = `<span></span><span class="bubbles"><span class="bub r${c[2] ? '' : ' zero'}">${c[2]}</span><span class="bub o${c[1] ? '' : ' zero'}">${c[1]}</span><span class="bub g">${c[0]}</span></span>`;
     b.firstChild.textContent = t.label;
-    b.title = `${t.label} — ${open} tâche(s) en cours${urgent ? ', dont urgentes' : ''} (Ctrl+${i + 1})`;
+    b.title = `${t.label} (Ctrl+${i + 1})\n● ${c[2]} urgente(s)\n● ${c[1]} importante(s)\n● ${c[0]} normale(s)`;
     b.onclick = () => { if (state.activeTab !== t.id) { state.activeTab = t.id; commit(); } };
     // déposer une liste sur un onglet = la déplacer dans cet onglet
     b.addEventListener('dragover', e => {
@@ -473,7 +604,7 @@ function renderList(l) {
 
 function renderTask(l, t) {
   const row = el('div', 'task p' + t.prio + (t.done ? ' done' : ''));
-  row.draggable = !t.done;
+  row.draggable = !t.done; row.dataset.id = t.id;
 
   const cb = el('input'); cb.type = 'checkbox'; cb.checked = t.done;
   cb.title = t.done ? 'Remettre en cours' : 'Marquer comme terminée';
@@ -482,17 +613,32 @@ function renderTask(l, t) {
   const pr = el('button', 'prio'); pr.title = `Priorité : ${PRIO[t.prio]} — cliquer pour changer`;
   pr.onclick = () => { t.prio = (t.prio + 1) % 3; commit(); };
 
+  const main = el('div', 'tmain');
   const tx = el('div', 'text'); tx.textContent = t.text;
   if (!t.done) { tx.title = 'Cliquer pour modifier'; tx.onclick = () => startEdit(l, t, row, tx); }
+  main.append(tx);
+  if (t.due) {
+    const chip = el('button', 'chip ' + (t.done ? '' : isRinging(t) ? 'ring' : dueState(t)));
+    chip.innerHTML = ICON.cal + '<span></span>' + (t.remind != null && !t.done ? ICON.bell : '');
+    chip.querySelector('span').textContent = fmtDue(t);
+    chip.title = t.done ? '' : 'Modifier la date / le rappel' + (t.remind != null ? `\nRappel : ${remindLabel(t)}` : '');
+    chip.onclick = e => { e.stopPropagation(); if (!t.done) openDatePop(chip, l, t); };
+    main.append(chip);
+  }
 
   const del = el('button', 'ibtn danger', ICON.x); del.title = 'Supprimer (annulable)';
   del.onclick = () => deleteTask(l, t);
 
-  if (t.done) row.append(cb, tx, del); else row.append(cb, pr, tx, del);
+  if (t.done) row.append(cb, main, del);
+  else {
+    const calBtn = el('button', 'ibtn calbtn', ICON.cal); calBtn.title = 'Date et rappel';
+    calBtn.onclick = e => { e.stopPropagation(); openDatePop(calBtn, l, t); };
+    row.append(cb, pr, main, calBtn, del);
+  }
 
   row.addEventListener('dragstart', e => {
     if (tx.isContentEditable) { e.preventDefault(); return; }
-    closePal();
+    closePal(); closeDatePop();
     drag = { type: 'task', listId: l.id, taskId: t.id };
     e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', t.text);
     requestAnimationFrame(() => row.classList.add('dragging'));
@@ -575,33 +721,302 @@ document.addEventListener('mousedown', e => { if (!pal.contains(e.target) && !e.
 
 /* ============ En-tête : boutons & raccourcis ============ */
 $('#addList').onclick = newList;
-$('#btnExport').onclick = () => {
+function doExport() {
   if (savePending) writeNow();
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const a = el('a'); a.href = URL.createObjectURL(blob);
   a.download = `suidepro-${new Date().toISOString().slice(0, 10)}.json`;
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('Sauvegarde téléchargée');
-};
-$('#btnImport').onclick = () => $('#fileImport').click();
+}
 $('#fileImport').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try {
     const data = JSON.parse(await f.text());
     if (!data || !data.tabs) throw new Error();
-    snapshot(); state = normalize(data); commit();
+    snapshot(); state = normalize(data); if (state.theme) applyTheme(state.theme); renderGuides(); commit(); closeModal('options');
     toast('Sauvegarde restaurée', true);
   } catch { toast('Fichier non reconnu'); }
 };
 document.addEventListener('keydown', e => {
+  if (e.key === 'F1') { e.preventDefault(); $('#guide').classList.contains('open') ? closeGuide() : openGuide(); return; }
+  if (e.key === 'Escape') {
+    if (dpEl.classList.contains('open')) { closeDatePop(); return; }
+    if ($('.modal.open')) { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); return; }
+    if (drawerEl.classList.contains('open')) { closeDrawer(); return; }
+  }
   if ((e.ctrlKey || e.metaKey) && ['1', '2', '3'].includes(e.key)) {
     e.preventDefault(); if (document.activeElement) document.activeElement.blur();
     state.activeTab = TABS[+e.key - 1].id; commit(); return;
   }
   if (isEditing()) return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && undoSnap) { e.preventDefault(); undo(); }
+  if (e.key === '?') { e.preventDefault(); openGuide(); return; }
   if (e.altKey && e.key.toLowerCase() === 'n') { e.preventDefault(); newList(); }
 });
+
+/* ============ Guide (fond d'écran + fenêtre) ============ */
+// [titre, description, touches (tableau), section]
+const GUIDE = [
+  ['Ajouter une tâche',        'Taper dans le champ de la liste', ['Entrée'], 'Tâches'],
+  ['Tâche importante',          'Commencer le texte par !',        ['!'], 'Tâches'],
+  ['Tâche urgente',             'Commencer le texte par !!',       ['!!'], 'Tâches'],
+  ['Changer la priorité',       'Clic sur la pastille ronde',      ['Clic ●'], 'Tâches'],
+  ['Modifier un texte',         'Clic dessus, puis Entrée pour valider, Échap pour annuler', ['Clic'], 'Tâches'],
+  ['Terminer',                  'Cocher la case : la tâche descend dans « Terminées »', ['☑ Cocher'], 'Tâches'],
+  ['Réorganiser',               'Glisser une tâche, dans sa liste ou vers une autre', ['Glisser'], 'Tâches'],
+  ['Date et rappel',            'Icône calendrier au survol de la tâche (ou clic sur sa date)', ['Clic 📅'], 'Tâches'],
+  ['Nouvelle liste',            'Bouton « + Nouvelle liste »',     ['Alt','N'], 'Listes'],
+  ['Renommer une liste',        'Clic sur son titre',              ['Clic'], 'Listes'],
+  ['Déplacer une liste',        'Glisser son en-tête',             ['Glisser'], 'Listes'],
+  ['Changer une liste d\'onglet','Déposer son en-tête sur un onglet', ['Glisser → onglet'], 'Listes'],
+  ['Trier par priorité',        'Icône ⇅ : urgent en haut',        ['⇅ Icône'], 'Listes'],
+  ['Couleur de la liste',       'Clic sur la pastille de couleur', ['Clic ●'], 'Listes'],
+  ['Supprimer',                 'Corbeille (liste) ou ✕ (tâche)',  ['Annuler','Ctrl','Z'], 'Général'],
+  ['Changer d\'onglet',         'Production / Social / À faire',   ['Ctrl','1·2·3'], 'Général'],
+  ['Échéances et rappels',      'Cloche en haut : rappels, en retard, aujourd\'hui, à venir', ['Clic 🔔'], 'Général'],
+  ['Thème clair / sombre',      'Bouton soleil / lune en haut',    ['☀ / ☾'], 'Général'],
+  ['Options',                   'Notifications, thème, astuces, sauvegarde', ['Clic ⚙'], 'Général'],
+  ['Ouvrir ce guide',           'Bouton « Guide »',                ['F1'], 'Général'],
+];
+// lignes affichées en permanence dans le fond d'écran (les plus utiles)
+const BG_KEYS = ['Ajouter une tâche','Tâche importante','Tâche urgente','Changer la priorité','Modifier un texte','Réorganiser',
+  'Date et rappel','Échéances et rappels','Changer une liste d\'onglet','Trier par priorité','Supprimer','Changer d\'onglet','Nouvelle liste','Ouvrir ce guide'];
+function keysHTML(ks) { return ks.map(k => /^(Clic|Glisser|Annuler|⇅|☑|☀)/.test(k) ? `<span>${k}</span>` : `<kbd>${k}</kbd>`).join(' '); }
+function renderGuides() {
+  const bg = $('#bgGuide');
+  bg.style.display = state.settings.tips ? '' : 'none';
+  bg.innerHTML = '<h3>Astuces</h3>' + GUIDE.filter(g => BG_KEYS.includes(g[0]))
+    .map(g => `<div class="grow"><b>${g[0]}</b><span class="how">${keysHTML(g[2])}</span></div>`).join('')
+    + '<div class="foot">Toutes les fonctions : bouton « Guide » ou <kbd>F1</kbd></div>';
+  const card = $('#guide .card');
+  let h = `<button class="ibtn close" title="Fermer (Échap)">${ICON.x}</button><h2>Guide de Suidepro</h2>
+    <p class="sub">Une colonne par ligne de production, dans trois onglets : Production, Social, À faire. Tout est enregistré automatiquement sur ce PC.</p>`;
+  ['Tâches','Listes','Général'].forEach(sec => {
+    h += `<h4>${sec}</h4>` + GUIDE.filter(g => g[3] === sec)
+      .map(g => `<div class="grow"><div><b>${g[0]}</b><br><span class="d">${g[1]}</span></div><span class="how">${keysHTML(g[2])}</span></div>`).join('');
+  });
+  h += `<h4>Priorités</h4><div class="grow"><div><span class="legend" style="border:2px solid var(--line2)"></span> Normale &nbsp; <span class="legend" style="background:var(--imp)"></span> Importante &nbsp; <span class="legend" style="background:var(--urg)"></span> Urgente<br><span class="d">Les 3 bulles de chaque onglet comptent les tâches en cours : rouge = urgentes, orange = importantes, gris = normales.</span></div><span></span></div>
+    <h4>Dates et rappels</h4><div class="grow"><div><span class="d">Une date apparaît sous la tâche : orange le jour J, rouge en retard, pleine rouge quand le rappel sonne. La cloche compte les rappels arrivés et liste toutes les échéances de tous les onglets ; « Vu » arrête le rappel. Une date sans heure déclenche son rappel à 8h00. Les notifications Windows se désactivent dans Options.</span></div><span></span></div>
+    <h4>Sauvegarde</h4><div class="grow"><div><span class="d">Dans Options : « Sauvegarder » télécharge un fichier .json de toutes vos listes ; « Restaurer » le recharge (changement de PC, sécurité).</span></div><span></span></div>`;
+  card.innerHTML = h;
+  card.querySelector('.close').onclick = closeGuide;
+}
+function openGuide() { closePal(); closeDatePop(); $('#guide').classList.add('open'); }
+function closeGuide() { $('#guide').classList.remove('open'); }
+$('#btnGuide').onclick = openGuide;
+$('#guide').addEventListener('mousedown', e => { if (e.target.id === 'guide') closeGuide(); });
+
+/* ============ Dates ============ */
+const pad = n => String(n).padStart(2, '0');
+const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseDay = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+function dueAt(t) {
+  if (!t.due) return null;
+  const d = parseDay(t.due); const [h, mi] = (t.time || DEFAULT_HOUR).split(':').map(Number); d.setHours(h, mi, 0, 0); return d;
+}
+function remindAt(t) { const d = dueAt(t); return d && t.remind != null ? new Date(d - t.remind * 60000) : null; }
+function dayDiff(s) { const a = parseDay(s), b = new Date(); b.setHours(0, 0, 0, 0); return Math.round((a - b) / 86400000); }
+function fmtDay(s, long) {
+  const n = dayDiff(s);
+  if (n === 0) return "Aujourd'hui"; if (n === 1) return 'Demain'; if (n === -1) return 'Hier';
+  return parseDay(s).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: long && Math.abs(n) > 300 ? 'numeric' : undefined });
+}
+function fmtDue(t) { return fmtDay(t.due) + (t.time ? ' · ' + t.time : ''); }
+function remindLabel(t) {
+  const r = remindAt(t); if (!r) return '';
+  return `${REMINDERS.find(x => x[0] === t.remind)[1].toLowerCase()} — ${fmtDay(isoDay(r), true)} à ${pad(r.getHours())}:${pad(r.getMinutes())}`;
+}
+function dueState(t) {
+  if (t.done || !t.due) return '';
+  const n = dayDiff(t.due);
+  if (n < 0 || (n === 0 && t.time && dueAt(t) < new Date())) return 'late';
+  return n === 0 ? 'today' : '';
+}
+function isRinging(t) { if (t.done || t.remindAck) return false; const r = remindAt(t); return !!r && r <= new Date(); }
+function* allTasks() { for (const tab of TABS) for (const l of state.tabs[tab.id]) for (const t of l.tasks) yield { t, l, tab }; }
+
+/* --- fenêtre date / rappel --- */
+const dpEl = $('#datepop');
+function openDatePop(anchor, l, t) {
+  closePal();
+  dpEl.dataset.for = t.id;
+  dpEl.innerHTML = `
+    <div class="dp-quick"><button data-q="0">Aujourd'hui</button><button data-q="1">Demain</button><button data-q="mon">Lundi</button><button data-q="7">+1 semaine</button></div>
+    <label>Date<input type="date" class="dp-date"></label>
+    <label>Heure <small>(facultatif)</small><input type="time" class="dp-time"></label>
+    <label>Rappel<select class="dp-rem">${REMINDERS.map(([v, n]) => `<option value="${v ?? ''}">${n}</option>`).join('')}</select></label>
+    <div class="dp-note"></div>
+    <div class="dp-foot"><button class="linkbtn dp-clear">Retirer la date</button><button class="bigbtn small dp-ok">OK</button></div>`;
+  const dDate = dpEl.querySelector('.dp-date'), dTime = dpEl.querySelector('.dp-time'), dRem = dpEl.querySelector('.dp-rem'), note = dpEl.querySelector('.dp-note');
+  dDate.value = t.due || ''; dTime.value = t.time || ''; dRem.value = t.remind ?? '';
+  const showNote = () => {
+    note.textContent = !t.due ? 'Choisissez une date.' : t.remind != null ? `🔔 Rappel ${remindLabel(t)}` : 'Pas de rappel : la date reste affichée sur la tâche.';
+  };
+  const apply = () => {
+    if (!dDate.value) { delete t.due; delete t.time; t.remind = null; }
+    else { t.due = dDate.value; if (dTime.value) t.time = dTime.value; else delete t.time; t.remind = dRem.value === '' ? null : +dRem.value; }
+    t.notified = false; t.remindAck = false;
+    if (t.remind != null) askNotifPermission();
+    showNote(); commit();
+  };
+  dpEl.querySelectorAll('.dp-quick button').forEach(b => b.onclick = () => {
+    const d = new Date(); const q = b.dataset.q;
+    if (q === 'mon') d.setDate(d.getDate() + (((8 - d.getDay()) % 7) || 7)); else d.setDate(d.getDate() + +q);
+    dDate.value = isoDay(d); apply();
+  });
+  dDate.onchange = dTime.onchange = dRem.onchange = apply;
+  dpEl.querySelectorAll('input,select').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); closeDatePop(); } });
+  dpEl.querySelector('.dp-clear').onclick = () => { dDate.value = ''; apply(); closeDatePop(); };
+  dpEl.querySelector('.dp-ok').onclick = closeDatePop;
+  showNote();
+  dpEl.classList.add('open');
+  const r = anchor.getBoundingClientRect(), h = dpEl.offsetHeight, w = dpEl.offsetWidth;
+  dpEl.style.left = Math.max(10, Math.min(r.left - 20, innerWidth - w - 10)) + 'px';
+  dpEl.style.top = (r.bottom + h + 10 < innerHeight ? r.bottom + 6 : Math.max(10, r.top - h - 6)) + 'px';
+  if (!t.due) dDate.focus();
+}
+function closeDatePop() { dpEl.classList.remove('open'); dpEl.dataset.for = ''; }
+document.addEventListener('mousedown', e => {
+  if (dpEl.classList.contains('open') && !dpEl.contains(e.target) && !e.target.closest('.chip,.calbtn')) closeDatePop();
+});
+
+/* ============ Rappels, cloche & panneau ============ */
+const drawerEl = $('#drawer');
+$('#btnBell').innerHTML = ICON.bell + '<span id="bellBadge" hidden></span>';
+function renderBell() {
+  let n = 0; for (const { t } of allTasks()) if (isRinging(t)) n++;
+  const badge = $('#bellBadge'); badge.textContent = n; badge.hidden = !n;
+  $('#btnBell').title = n ? `${n} rappel(s) — voir les échéances` : 'Échéances et rappels';
+  document.title = (n ? `(${n}) ` : '') + 'Suidepro — Suivi de production';
+}
+function goToTask(id) {
+  for (const { t, l, tab } of allTasks()) if (t.id === id) {
+    state.activeTab = tab.id; if (t.done) l.showDone = true;
+    commit();
+    requestAnimationFrame(() => {
+      const row = board.querySelector(`.task[data-id="${id}"]`); if (!row) return;
+      row.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+      row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 2200);
+    });
+    return;
+  }
+}
+function renderDrawer() {
+  const items = [...allTasks()].filter(x => !x.t.done && x.t.due).sort((a, b) => dueAt(a.t) - dueAt(b.t));
+  const groups = [['ring', '🔔 Rappels', 'r'], ['late', 'En retard', 'r'], ['today', "Aujourd'hui", 'o'], ['tomorrow', 'Demain', ''], ['week', '7 prochains jours', ''], ['later', 'Plus tard', '']];
+  const by = Object.fromEntries(groups.map(g => [g[0], []]));
+  items.forEach(x => {
+    const n = dayDiff(x.t.due), st = dueState(x.t);
+    by[isRinging(x.t) ? 'ring' : st === 'late' ? 'late' : n === 0 ? 'today' : n === 1 ? 'tomorrow' : n <= 7 ? 'week' : 'later'].push(x);
+  });
+  drawerEl.innerHTML = `<div class="dr-head"><h2>Échéances</h2><button class="ibtn" title="Fermer (Échap)">${ICON.x}</button></div><div class="dr-body"></div>
+    <div class="dr-foot">Notifications Windows : <b>${state.settings.notify ? 'activées' : 'désactivées'}</b> — <button>Options</button></div>`;
+  drawerEl.querySelector('.dr-head .ibtn').onclick = closeDrawer;
+  drawerEl.querySelector('.dr-foot button').onclick = openOptions;
+  const body = drawerEl.querySelector('.dr-body');
+  if (!items.length) { body.innerHTML = `<div class="dr-empty">Aucune échéance.<br>Ajoutez une date à une tâche avec l'icône calendrier qui apparaît au survol.</div>`; return; }
+  groups.forEach(([k, label, cls]) => {
+    if (!by[k].length) return;
+    body.append(el('h4', cls, `${label} (${by[k].length})`));
+    by[k].forEach(({ t, l, tab }) => {
+      const it = el('div', 'ditem'); it.style.setProperty('--c', l.color);
+      it.innerHTML = `<div class="dmain"><div class="dt"></div><div class="ds"></div></div>`;
+      it.querySelector('.dt').textContent = (t.prio === 2 ? '🔴 ' : t.prio === 1 ? '🟠 ' : '') + t.text;
+      it.querySelector('.ds').textContent = `${fmtDue(t)} · ${tab.label} › ${l.title}`;
+      it.title = 'Aller à la tâche';
+      it.onclick = () => goToTask(t.id);
+      if (k === 'ring') {
+        const ack = el('button', 'ack', 'Vu'); ack.title = 'Arrêter ce rappel (la date reste)';
+        ack.onclick = e => { e.stopPropagation(); t.remindAck = true; commit(); };
+        it.append(ack);
+      }
+      body.append(it);
+    });
+  });
+}
+function openDrawer() { closeDatePop(); renderDrawer(); drawerEl.classList.add('open'); }
+function closeDrawer() { drawerEl.classList.remove('open'); }
+$('#btnBell').onclick = () => drawerEl.classList.contains('open') ? closeDrawer() : openDrawer();
+document.addEventListener('mousedown', e => {
+  if (drawerEl.classList.contains('open') && !drawerEl.contains(e.target) && !e.target.closest('#btnBell,.modal,#toast')) closeDrawer();
+});
+
+/* --- notifications Windows --- */
+const notifSupported = () => 'Notification' in window && window.isSecureContext;
+function askNotifPermission() {
+  if (state.settings.notify && notifSupported() && Notification.permission === 'default')
+    Notification.requestPermission().then(() => { if ($('#options').classList.contains('open')) renderOptions(); });
+}
+function notify(t, l, tab) {
+  if (!state.settings.notify || !notifSupported() || Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification('Suidepro — Rappel', { body: `${t.text}\n${fmtDue(t)} · ${tab.label} › ${l.title}`, icon: 'icons/icon-192.png', tag: t.id, silent: true });
+    n.onclick = () => { window.focus(); goToTask(t.id); n.close(); };
+  } catch {}
+}
+let lastSig = '';
+function tick() {
+  if (!state) return;
+  let changed = false; const ring = [], late = [];
+  for (const x of allTasks()) {
+    if (isRinging(x.t)) { ring.push(x.t.id); if (!x.t.notified) { x.t.notified = true; changed = true; notify(x.t, x.l, x.tab); } }
+    if (dueState(x.t) === 'late') late.push(x.t.id);
+  }
+  if (changed) { save(); $('#btnBell').classList.remove('ringing'); void $('#btnBell').offsetWidth; $('#btnBell').classList.add('ringing'); }
+  const sig = isoDay(new Date()) + '|' + ring.join(',') + '|' + late.join(',');
+  if (sig !== lastSig) {
+    lastSig = sig;
+    renderBell(); if (drawerEl.classList.contains('open')) renderDrawer();
+    if (!isEditing() && !drag && !dpEl.classList.contains('open')) renderBoard();
+  }
+}
+
+/* ============ Options ============ */
+function renderOptions() {
+  const card = $('#options .card');
+  const dark = document.documentElement.dataset.theme === 'dark';
+  let perm = '';
+  if (state.settings.notify) {
+    if (!notifSupported()) perm = '<span class="warn">Indisponibles quand le fichier est ouvert en local : utilisez la version installée (GitHub Pages).</span>';
+    else if (Notification.permission === 'denied') perm = '<span class="warn">Bloquées par le navigateur : cliquez sur le cadenas de la barre d\'adresse pour les autoriser.</span>';
+    else if (Notification.permission === 'default') perm = '<span>Windows vous demandera l\'autorisation au premier rappel. <button class="linkbtn askp" style="color:var(--accent)">Autoriser maintenant</button></span>';
+    else perm = '<span>Autorisées ✓ — affichées sans son, même si Suidepro est en arrière-plan.</span>';
+  }
+  card.innerHTML = `<button class="ibtn close" title="Fermer (Échap)">${ICON.x}</button><h2>Options</h2><p class="sub">Réglages enregistrés sur ce PC.</p>
+    <div class="opt"><div class="od"><b>Notifications Windows</b><span>Petite fenêtre en bas de l'écran quand un rappel arrive.</span><br>${perm}</div><input type="checkbox" class="switch o-notif" ${state.settings.notify ? 'checked' : ''}></div>
+    <div class="opt"><div class="od"><b>Thème</b><span>Apparence de l'application.</span></div><div class="seg"><button class="o-light ${dark ? '' : 'on'}">☀ Clair</button><button class="o-dark ${dark ? 'on' : ''}">☾ Sombre</button></div></div>
+    <div class="opt"><div class="od"><b>Astuces en fond d'écran</b><span>Rappel des raccourcis derrière les listes.</span></div><input type="checkbox" class="switch o-tips" ${state.settings.tips ? 'checked' : ''}></div>
+    <div class="opt"><div class="od"><b>Sauvegarde</b><span>Fichier .json de toutes les listes, pour changer de PC ou garder une copie de sécurité.</span></div><button class="obtn o-exp">Sauvegarder</button><button class="obtn o-imp">Restaurer</button></div>
+    <p class="sub" style="margin-top:14px;font-size:12px">Suidepro — Version ${APP_VERSION} — ${AUTHOR}</p>`;
+  card.querySelector('.close').onclick = () => closeModal('options');
+  card.querySelector('.o-notif').onchange = e => { state.settings.notify = e.target.checked; save(); if (e.target.checked) askNotifPermission(); renderOptions(); };
+  const ap = card.querySelector('.askp'); if (ap) ap.onclick = () => Notification.requestPermission().then(renderOptions);
+  card.querySelector('.o-light').onclick = () => { state.theme = 'light'; applyTheme('light'); save(); renderOptions(); };
+  card.querySelector('.o-dark').onclick = () => { state.theme = 'dark'; applyTheme('dark'); save(); renderOptions(); };
+  card.querySelector('.o-tips').onchange = e => { state.settings.tips = e.target.checked; save(); renderGuides(); };
+  card.querySelector('.o-exp').onclick = doExport;
+  card.querySelector('.o-imp').onclick = () => $('#fileImport').click();
+}
+function openOptions() { closePal(); closeDatePop(); renderOptions(); $('#options').classList.add('open'); }
+function closeModal(id) { $('#' + id).classList.remove('open'); }
+$('#btnOptions').innerHTML = ICON.gear;
+$('#btnOptions').onclick = openOptions;
+$('#options').addEventListener('mousedown', e => { if (e.target.id === 'options') closeModal('options'); });
+$('#footer').textContent = `${AUTHOR} - 2026 - Tous droits réservés - Version ${APP_VERSION}`;
+
+/* ============ Thème ============ */
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('suidepro-theme', t); } catch {}
+  const b = $('#btnTheme');
+  b.innerHTML = t === 'dark' ? ICON.sun : ICON.moon;
+  b.title = t === 'dark' ? 'Passer au thème clair' : 'Passer au thème sombre';
+}
+$('#btnTheme').onclick = () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  state.theme = t; applyTheme(t); save();
+};
 
 /* ============ Démarrage ============ */
 (async function init() {
@@ -612,7 +1027,10 @@ document.addEventListener('keydown', e => {
     state = defaultState();
     saveEl.textContent = '⚠ Stockage indisponible'; saveEl.className = 'err';
   }
+  applyTheme(state.theme || document.documentElement.dataset.theme || 'light');
+  renderGuides();
   render();
+  tick(); setInterval(tick, 20000);
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
