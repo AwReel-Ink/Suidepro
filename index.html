@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Suidepro — Suivi de production</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1F2937">
+<meta name="application-name" content="Suidepro">
+<meta name="description" content="Suidepro — suivi de plusieurs lignes de production par listes de tâches.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#EEF1F5; --panel:#fff; --text:#1F2937; --muted:#6B7280; --line:#E5E7EB;
+  --accent:#2563EB; --imp:#F59E0B; --urg:#EF4444; --radius:12px;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+button{font:inherit}
+
+/* ---------- En-tête ---------- */
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#1F2937;color:#fff;flex:none}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;margin-right:10px;white-space:nowrap}
+.brand svg{width:26px;height:26px;flex:none}
+#tabs{display:flex;gap:4px;background:rgba(255,255,255,.08);padding:4px;border-radius:10px}
+.tab{border:0;background:transparent;color:#CBD5E1;padding:8px 16px;border-radius:7px;font-weight:600;cursor:pointer;display:flex;gap:8px;align-items:center;transition:background .15s,color .15s}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tab.active{background:#fff;color:#111827}
+.tab .badge{font-size:11px;min-width:20px;padding:1px 6px;border-radius:10px;background:rgba(255,255,255,.16);text-align:center}
+.tab.active .badge{background:#E5E7EB}
+.tab .badge.hot{background:var(--urg);color:#fff}
+.tab.drop{outline:2px dashed #fff;outline-offset:2px;background:rgba(255,255,255,.2);color:#fff}
+.hbtn{border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;background:rgba(255,255,255,.1);color:#E5E7EB;white-space:nowrap}
+.hbtn:hover{background:rgba(255,255,255,.2)}
+.hbtn.primary{background:var(--accent);color:#fff}
+.hbtn.primary:hover{background:#1D4ED8}
+.spacer{flex:1}
+#saveState{font-size:12px;color:#9CA3AF;min-width:95px;text-align:right;transition:color .3s}
+#saveState.ok{color:#6EE7B7}
+#saveState.err{color:#FCA5A5}
+
+/* ---------- Tableau ---------- */
+main{flex:1;display:flex;gap:16px;padding:18px;overflow-x:auto;overflow-y:hidden;align-items:flex-start}
+.col{flex:0 0 300px;max-height:100%;display:flex;flex-direction:column;background:var(--panel);border-radius:var(--radius);
+  box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);border-top:7px solid var(--c);overflow:hidden}
+.col.dragging{opacity:.35}
+.col-head{display:flex;align-items:center;gap:4px;padding:8px 8px 4px 4px;cursor:grab}
+.grip{color:#B6BCC6;padding:4px 2px;user-select:none;font-size:15px;line-height:1}
+.col-title{flex:1;font-weight:700;font-size:15px;padding:4px 6px;border-radius:6px;outline:none;word-break:break-word;min-width:20px}
+.col-title:hover{background:#F3F4F6}
+.col-title:focus{background:#fff;box-shadow:0 0 0 2px var(--c);cursor:text}
+.ibtn{width:28px;height:28px;border:0;background:transparent;border-radius:6px;cursor:pointer;color:var(--muted);display:grid;place-items:center;flex:none;padding:0}
+.ibtn:hover{background:#F3F4F6;color:var(--text)}
+.ibtn.danger:hover{background:#FEE2E2;color:var(--urg)}
+.ibtn svg{width:16px;height:16px}
+.swatch{width:16px;height:16px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+.stats{display:flex;align-items:center;gap:8px;padding:0 12px 8px}
+.progress{flex:1;height:5px;background:#F1F3F5;border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--c);transition:width .3s}
+.meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.add{margin:0 10px 10px;padding:9px 10px;border:1px dashed #CDD2D9;border-radius:8px;font:inherit;outline:none;background:#FAFBFC;color:var(--text)}
+.add::placeholder{color:#9CA3AF}
+.add:hover{border-color:var(--c)}
+.add:focus{border:1px solid var(--c);background:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent)}
+.body{overflow-y:auto;padding:0 10px 10px;flex:1;min-height:30px}
+.tasks{display:flex;flex-direction:column;gap:6px;min-height:6px}
+.hint{font-size:12px;color:#A0A7B2;text-align:center;padding:10px 4px}
+
+/* ---------- Tâches ---------- */
+.task{display:flex;align-items:flex-start;gap:8px;padding:8px 6px 8px 8px;border-radius:8px;background:#F9FAFB;border:1px solid var(--line);
+  border-left:4px solid #D7DCE2;cursor:grab;transition:background .15s,opacity .2s,transform .2s}
+.task:hover{border-color:#CDD3DA;border-left-color:#C3C9D1}
+.task.p1{border-left-color:var(--imp);background:#FFF8E6}
+.task.p2{border-left-color:var(--urg);background:#FEF0F0}
+.task.dragging{opacity:.3}
+.task.checking{opacity:.4;transform:translateX(6px)}
+.task input[type=checkbox]{width:18px;height:18px;margin:1px 0 0;accent-color:var(--c);cursor:pointer;flex:none}
+.prio{width:18px;height:18px;border-radius:50%;border:2px solid #CBD1D8;background:#fff;cursor:pointer;flex:none;margin-top:1px;padding:0;transition:transform .1s}
+.prio:hover{transform:scale(1.15)}
+.p1 .prio{background:var(--imp);border-color:var(--imp)}
+.p2 .prio{background:var(--urg);border-color:var(--urg)}
+.text{flex:1;line-height:1.4;word-break:break-word;outline:none;cursor:text;min-height:20px;white-space:pre-wrap;padding:0 2px;border-radius:4px}
+.text:hover{background:rgba(0,0,0,.03)}
+.text[contenteditable="true"],.text[contenteditable="plaintext-only"]{background:#fff;box-shadow:0 0 0 2px var(--c);cursor:text}
+.task .ibtn{width:22px;height:22px;opacity:0}
+.task:hover .ibtn{opacity:1}
+.task .ibtn svg{width:13px;height:13px}
+.task.done{background:#fff;cursor:default;border-left-color:#E5E7EB}
+.task.done .text{text-decoration:line-through;color:#9CA3AF;cursor:default}
+.task.done .text:hover{background:none}
+.placeholder{height:36px;border-radius:8px;border:2px dashed var(--c);background:color-mix(in srgb,var(--c) 8%,transparent);flex:none}
+
+.done-head{display:flex;align-items:center;margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
+.done-toggle{flex:1;text-align:left;border:0;background:none;color:var(--muted);font-weight:600;cursor:pointer;padding:6px 2px;border-radius:6px;font-size:13px}
+.done-toggle:hover{color:var(--text)}
+.done-toggle .chev{display:inline-block;width:14px;transition:transform .15s}
+.done-toggle.open .chev{transform:rotate(90deg)}
+.linkbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px}
+.linkbtn:hover{background:#FEE2E2;color:var(--urg)}
+.donelist{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+
+.addcol{flex:0 0 240px;height:110px;border:2px dashed #C5CCD6;border-radius:var(--radius);background:transparent;color:var(--muted);font-weight:600;cursor:pointer;font-size:15px}
+.addcol:hover{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.04)}
+.empty{margin:auto;text-align:center;color:var(--muted);max-width:420px}
+.empty h2{color:var(--text);font-size:20px;margin:0 0 8px}
+.empty p{margin:0 0 18px;line-height:1.5}
+.bigbtn{border:0;border-radius:10px;padding:12px 22px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+.bigbtn:hover{background:#1D4ED8}
+
+/* ---------- Palette & toast ---------- */
+.pop{position:fixed;display:none;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:8px;gap:6px;z-index:50;grid-template-columns:repeat(4,28px)}
+.pop.open{display:grid}
+.sw{width:28px;height:28px;border-radius:50%;border:3px solid #fff;cursor:pointer;box-shadow:0 0 0 1px #E5E7EB}
+.sw.on,.sw:hover{box-shadow:0 0 0 2px #111827}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#111827;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;
+  display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:.2s;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{border:0;background:#374151;color:#93C5FD;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer}
+#toast button:hover{background:#4B5563}
+.help{position:fixed;right:18px;bottom:14px;font-size:12px;color:#9AA3AE}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#374151"/><rect x="5" y="5" width="6" height="21" rx="1.5" fill="#fff"/><rect x="5" y="5" width="6" height="3" fill="#3B82F6"/><rect x="13" y="5" width="6" height="15" rx="1.5" fill="#fff"/><rect x="13" y="5" width="6" height="3" fill="#F59E0B"/><rect x="21" y="5" width="6" height="18" rx="1.5" fill="#fff"/><rect x="21" y="5" width="6" height="3" fill="#10B981"/></svg>
+    <span>Suidepro <small style="font-weight:500;color:#9CA3AF;margin-left:4px">Suivi de production</small></span>
+  </div>
+  <nav id="tabs"></nav>
+  <button id="addList" class="hbtn primary" title="Nouvelle liste (Alt+N)">+ Nouvelle liste</button>
+  <div class="spacer"></div>
+  <span id="saveState"></span>
+  <button id="btnExport" class="hbtn" title="Télécharger une copie de toutes les données (.json)">Sauvegarder</button>
+  <button id="btnImport" class="hbtn" title="Recharger une sauvegarde (.json)">Restaurer</button>
+  <input type="file" id="fileImport" accept=".json,application/json" hidden>
+</header>
+<main id="board"></main>
+<div id="palette" class="pop"></div>
+<div id="toast"></div>
+<div class="help">Glisser pour réorganiser · clic sur un texte pour le modifier · « ! » ou « !! » en début de tâche = important / urgent</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============ Constantes ============ */
+const TABS = [
+  { id: 'production', label: 'Production' },
+  { id: 'social',     label: 'Social' },
+  { id: 'todo',       label: 'À faire' }
+];
+const COLORS = ['#3B82F6','#F59E0B','#10B981','#8B5CF6','#EC4899','#14B8A6','#EF4444','#64748B'];
+const PRIO = ['Normale', 'Importante', 'Urgente'];
+const ICON = {
+  sort:  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.5v11M2.5 5 5 2.5 7.5 5M11 13.5v-11M8.5 11l2.5 2.5 2.5-2.5"/></svg>',
+  trash: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.8 6.5v4.5M9.2 6.5v4.5"/></svg>',
+  x:     '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>'
+};
+
+/* ============ Utilitaires ============ */
+const $ = s => document.querySelector(s);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const isEditing = () => { const a = document.activeElement; return a && (a.tagName === 'INPUT' || a.isContentEditable); };
+function makeEditable(node) {
+  node.contentEditable = 'plaintext-only';
+  if (node.contentEditable !== 'plaintext-only') node.contentEditable = 'true';
+  node.spellcheck = true;
+}
+function caretEnd(node, selectAll) {
+  const r = document.createRange(); r.selectNodeContents(node); if (!selectAll) r.collapse(false);
+  const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+
+const board = $('#board'), tabsEl = $('#tabs'), pal = $('#palette'), toastEl = $('#toast'), saveEl = $('#saveState');
+let state, db, drag = null, focusAfter = null, undoSnap = null, toastTimer, saveTimer, savePending = false;
+const ph = el('div', 'placeholder');
+const bc = ('BroadcastChannel' in window) ? new BroadcastChannel('suivi-production') : null;
+
+/* ============ Données ============ */
+const mkList = (title, i) => ({ id: uid(), title, color: COLORS[i % COLORS.length], showDone: false, tasks: [] });
+const defaultState = () => ({ v: 1, activeTab: 'production', tabs: { production: [mkList('Ligne 1', 0)], social: [], todo: [] } });
+function normalize(s) {
+  if (!s || typeof s !== 'object' || !s.tabs) return defaultState();
+  TABS.forEach(t => { if (!Array.isArray(s.tabs[t.id])) s.tabs[t.id] = []; });
+  if (!TABS.some(t => t.id === s.activeTab)) s.activeTab = 'production';
+  Object.values(s.tabs).forEach(arr => arr.forEach(l => {
+    l.id ||= uid(); l.title ??= 'Sans titre'; l.color ||= COLORS[0]; l.showDone = !!l.showDone;
+    l.tasks = Array.isArray(l.tasks) ? l.tasks : [];
+    l.tasks.forEach(t => { t.id ||= uid(); t.text = String(t.text ?? ''); t.done = !!t.done; t.prio = [0,1,2].includes(t.prio) ? t.prio : 0; });
+  }));
+  return s;
+}
+const curLists = () => state.tabs[state.activeTab];
+function findList(id) {
+  for (const k in state.tabs) { const l = state.tabs[k].find(x => x.id === id); if (l) return { list: l, tab: k }; }
+  return {};
+}
+const openTasks = l => l.tasks.filter(t => !t.done);
+function insertOpen(list, task, idx) {
+  const open = openTasks(list);
+  if (idx == null || idx >= open.length) {
+    const last = open[open.length - 1];
+    list.tasks.splice(last ? list.tasks.indexOf(last) + 1 : 0, 0, task);
+  } else list.tasks.splice(list.tasks.indexOf(open[idx]), 0, task);
+}
+
+/* ============ IndexedDB ============ */
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('suivi-production', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+function dbGet() {
+  return new Promise(res => {
+    const q = db.transaction('kv').objectStore('kv').get('state');
+    q.onsuccess = () => res(q.result); q.onerror = () => res(null);
+  });
+}
+function writeNow() {
+  clearTimeout(saveTimer); savePending = false;
+  if (!db) return;
+  try {
+    const tx = db.transaction('kv', 'readwrite');
+    tx.objectStore('kv').put(JSON.parse(JSON.stringify(state)), 'state');
+    tx.oncomplete = () => { saveEl.textContent = '✓ Enregistré'; saveEl.className = 'ok'; bc && bc.postMessage('saved');
+      setTimeout(() => { saveEl.className = ''; }, 1200); };
+    tx.onerror = () => { saveEl.textContent = '⚠ Erreur d\'enregistrement'; saveEl.className = 'err'; };
+  } catch (e) { saveEl.textContent = '⚠ Erreur d\'enregistrement'; saveEl.className = 'err'; }
+}
+function save() { savePending = true; clearTimeout(saveTimer); saveTimer = setTimeout(writeNow, 200); }
+function commit() { save(); render(); }
+document.addEventListener('visibilitychange', () => { if (document.hidden && savePending) writeNow(); });
+window.addEventListener('pagehide', () => { if (savePending) writeNow(); });
+if (bc) bc.onmessage = async () => { if (isEditing() || drag) return; const s = await dbGet(); if (s) { state = normalize(s); render(); } };
+
+/* ============ Annulation & toast ============ */
+function snapshot() { undoSnap = JSON.stringify(state); }
+function undo() {
+  if (!undoSnap) return;
+  state = JSON.parse(undoSnap); undoSnap = null; hideToast(); commit();
+}
+function toast(msg, withUndo) {
+  toastEl.innerHTML = ''; toastEl.append(el('span', '', '')); toastEl.firstChild.textContent = msg;
+  if (withUndo) { const b = el('button', '', 'Annuler'); b.onclick = undo; toastEl.append(b); }
+  toastEl.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, withUndo ? 7000 : 2500);
+}
+function hideToast() { toastEl.classList.remove('show'); }
+
+/* ============ Actions ============ */
+function newList() {
+  const lists = curLists();
+  const used = new Set(lists.map(l => l.color));
+  const l = mkList('Nouvelle liste', lists.length);
+  l.color = COLORS.find(c => !used.has(c)) || l.color;
+  lists.push(l);
+  focusAfter = { sel: `.col[data-id="${l.id}"] .col-title`, selectAll: true };
+  commit();
+  requestAnimationFrame(() => { board.scrollLeft = board.scrollWidth; });
+}
+function deleteList(l) {
+  snapshot();
+  const arr = curLists(); arr.splice(arr.indexOf(l), 1);
+  commit(); toast(`Liste « ${l.title} » supprimée`, true);
+}
+function addTask(l, raw) {
+  let text = raw.trim(), prio = 0;
+  if (text.startsWith('!!')) { prio = 2; text = text.slice(2).trim(); }
+  else if (text.startsWith('!')) { prio = 1; text = text.slice(1).trim(); }
+  if (!text) return;
+  insertOpen(l, { id: uid(), text, done: false, prio }, null);
+  focusAfter = { sel: `.col[data-id="${l.id}"] .add` };
+  commit();
+}
+function deleteTask(l, t) {
+  snapshot(); l.tasks.splice(l.tasks.indexOf(t), 1); commit(); toast('Tâche supprimée', true);
+}
+function toggleDone(l, t, row) {
+  if (!t.done) {
+    row.classList.add('checking');
+    setTimeout(() => { t.done = true; t.doneAt = Date.now(); commit(); }, 220);
+  } else {
+    t.done = false; delete t.doneAt;
+    l.tasks.splice(l.tasks.indexOf(t), 1); insertOpen(l, t, null); commit();
+  }
+}
+function sortByPrio(l) {
+  snapshot();
+  const open = openTasks(l).map((t, i) => [t, i]).sort((a, b) => (b[0].prio - a[0].prio) || (a[1] - b[1])).map(x => x[0]);
+  l.tasks = open.concat(l.tasks.filter(t => t.done));
+  commit(); toast('Liste triée : urgent en haut', true);
+}
+function clearDone(l) {
+  const n = l.tasks.length - openTasks(l).length; if (!n) return;
+  snapshot(); l.tasks = openTasks(l); commit();
+  toast(`${n} tâche${n > 1 ? 's' : ''} terminée${n > 1 ? 's' : ''} effacée${n > 1 ? 's' : ''}`, true);
+}
+function moveTask(fromId, taskId, toId, idx) {
+  const from = findList(fromId).list, to = findList(toId).list; if (!from || !to) return;
+  const i = from.tasks.findIndex(t => t.id === taskId); if (i < 0) return;
+  const [t] = from.tasks.splice(i, 1);
+  insertOpen(to, t, idx); commit();
+}
+function moveListToTab(listId, tabId) {
+  const { list, tab } = findList(listId); if (!list || tab === tabId) return;
+  snapshot();
+  state.tabs[tab].splice(state.tabs[tab].indexOf(list), 1);
+  state.tabs[tabId].push(list);
+  commit();
+  toast(`« ${list.title} » déplacée vers ${TABS.find(t => t.id === tabId).label}`, true);
+}
+
+/* ============ Rendu ============ */
+function render() { renderTabs(); renderBoard(); }
+
+function renderTabs() {
+  tabsEl.innerHTML = '';
+  TABS.forEach((t, i) => {
+    const lists = state.tabs[t.id];
+    const open = lists.reduce((n, l) => n + openTasks(l).length, 0);
+    const urgent = lists.some(l => l.tasks.some(x => !x.done && x.prio === 2));
+    const b = el('button', 'tab' + (state.activeTab === t.id ? ' active' : ''));
+    b.innerHTML = `<span></span><span class="badge${urgent ? ' hot' : ''}">${open}</span>`;
+    b.firstChild.textContent = t.label;
+    b.title = `${t.label} — ${open} tâche(s) en cours${urgent ? ', dont urgentes' : ''} (Ctrl+${i + 1})`;
+    b.onclick = () => { if (state.activeTab !== t.id) { state.activeTab = t.id; commit(); } };
+    // déposer une liste sur un onglet = la déplacer dans cet onglet
+    b.addEventListener('dragover', e => {
+      if (drag && drag.type === 'list' && t.id !== state.activeTab) { e.preventDefault(); b.classList.add('drop'); }
+    });
+    b.addEventListener('dragleave', () => b.classList.remove('drop'));
+    b.addEventListener('drop', e => {
+      if (!drag || drag.type !== 'list') return;
+      e.preventDefault(); b.classList.remove('drop');
+      const id = drag.listId; drag = null; moveListToTab(id, t.id);
+    });
+    tabsEl.append(b);
+  });
+}
+
+function renderBoard() {
+  const scroll = board.scrollLeft;
+  board.innerHTML = '';
+  const lists = curLists();
+  if (!lists.length) {
+    const tab = TABS.find(t => t.id === state.activeTab).label;
+    const e = el('div', 'empty', `<h2>Aucune liste dans « ${tab} »</h2><p>Créez une liste par ligne de production ou par sujet à suivre. Vous pourrez ensuite les réorganiser par glisser-déposer.</p>`);
+    const b = el('button', 'bigbtn', '+ Créer une liste'); b.onclick = newList; e.append(b);
+    board.append(e); return;
+  }
+  lists.forEach(l => board.append(renderList(l)));
+  const add = el('button', 'addcol', '+ Nouvelle liste'); add.onclick = newList; board.append(add);
+  board.scrollLeft = scroll;
+  if (focusAfter) {
+    const f = board.querySelector(focusAfter.sel);
+    if (f) { if (f._edit) f._edit(focusAfter.selectAll); else f.focus(); }
+    focusAfter = null;
+  }
+}
+
+function renderList(l) {
+  const col = el('section', 'col'); col.dataset.id = l.id; col.style.setProperty('--c', l.color);
+
+  /* --- En-tête --- */
+  const head = el('div', 'col-head');
+  head.title = 'Glisser pour déplacer la liste (ou la déposer sur un onglet)';
+  head.append(el('span', 'grip', '⠿'));
+  const title = el('div', 'col-title'); title.textContent = l.title;
+  title.title = 'Cliquer pour renommer · glisser pour déplacer';
+  title._edit = selectAll => {
+    if (title.isContentEditable) return;
+    const orig = l.title;
+    makeEditable(title); title.spellcheck = false; title.focus(); caretEnd(title, selectAll);
+    title.onkeydown = e => {
+      if (e.key === 'Enter') { e.preventDefault(); title.blur(); col.querySelector('.add').focus(); }
+      if (e.key === 'Escape') { title.textContent = orig; title.blur(); }
+    };
+    title.onblur = () => {
+      title.contentEditable = 'false'; title.onblur = title.onkeydown = null;
+      const v = title.textContent.trim() || 'Sans titre';
+      title.textContent = v; if (v !== l.title) { l.title = v; save(); }
+    };
+  };
+  title.onclick = () => title._edit(false);
+  const colorBtn = el('button', 'ibtn colorbtn', '<span class="swatch"></span>'); colorBtn.title = 'Changer la couleur';
+  colorBtn.onclick = e => { e.stopPropagation(); pal.classList.contains('open') && pal.dataset.for === l.id ? closePal() : openPal(colorBtn, l); };
+  const sortBtn = el('button', 'ibtn', ICON.sort); sortBtn.title = 'Trier par priorité (urgent en haut)';
+  sortBtn.onclick = () => sortByPrio(l);
+  const delBtn = el('button', 'ibtn danger', ICON.trash); delBtn.title = 'Supprimer la liste (annulable)';
+  delBtn.onclick = () => deleteList(l);
+  head.append(title, colorBtn, sortBtn, delBtn);
+
+  // glisser la colonne depuis l'en-tête (hors titre/boutons)
+  head.addEventListener('mousedown', e => { if (!e.target.closest('.ibtn') && !title.isContentEditable) col.draggable = true; });
+  head.addEventListener('mouseup', () => { col.draggable = false; });
+  col.addEventListener('dragstart', e => {
+    if (e.target !== col) return;
+    closePal();
+    drag = { type: 'list', listId: l.id, el: col };
+    e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', l.title);
+    requestAnimationFrame(() => col.classList.add('dragging'));
+  });
+  col.addEventListener('dragend', e => {
+    if (e.target !== col) return;
+    col.draggable = false; col.classList.remove('dragging');
+    document.querySelectorAll('.tab.drop').forEach(t => t.classList.remove('drop'));
+    if (drag && drag.type === 'list') {
+      const ids = [...board.querySelectorAll('.col')].map(c => c.dataset.id);
+      curLists().sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+      drag = null; commit();
+    }
+  });
+
+  /* --- Progression --- */
+  const total = l.tasks.length, done = total - openTasks(l).length;
+  const stats = el('div', 'stats', `<div class="progress"><i style="width:${total ? done / total * 100 : 0}%"></i></div><span class="meta">${done}/${total}</span>`);
+
+  /* --- Saisie rapide --- */
+  const add = el('input', 'add'); add.placeholder = '+ Ajouter une tâche… (Entrée)';
+  add.title = 'Astuce : commencer par « ! » = importante, « !! » = urgente';
+  add.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addTask(l, add.value); }
+    if (e.key === 'Escape') { add.value = ''; add.blur(); }
+  });
+
+  /* --- Tâches --- */
+  const body = el('div', 'body');
+  const zone = el('div', 'tasks');
+  const open = openTasks(l);
+  open.forEach(t => zone.append(renderTask(l, t)));
+  body.append(zone);
+  if (!total) body.append(el('div', 'hint', 'Liste vide — tapez une tâche ci-dessus ou glissez-en une ici.'));
+
+  const doneTasks = l.tasks.filter(t => t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  if (doneTasks.length) {
+    const dh = el('div', 'done-head');
+    const tg = el('button', 'done-toggle' + (l.showDone ? ' open' : ''), `<span class="chev">▸</span> Terminées (${doneTasks.length})`);
+    tg.onclick = () => { l.showDone = !l.showDone; commit(); };
+    const clr = el('button', 'linkbtn', 'Effacer'); clr.title = 'Effacer toutes les tâches terminées (annulable)';
+    clr.onclick = () => clearDone(l);
+    dh.append(tg, clr); body.append(dh);
+    if (l.showDone) {
+      const dl = el('div', 'donelist');
+      doneTasks.forEach(t => dl.append(renderTask(l, t)));
+      body.append(dl);
+    }
+  }
+
+  // dépôt de tâches n'importe où dans la colonne
+  col.addEventListener('dragover', e => {
+    if (!drag || drag.type !== 'task') return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    placePh(zone, e.clientY);
+  });
+  col.addEventListener('drop', e => {
+    if (!drag || drag.type !== 'task') return;
+    e.preventDefault();
+    const idx = phIndex(zone); ph.remove();
+    const d = drag; drag = null;
+    moveTask(d.listId, d.taskId, l.id, idx);
+  });
+
+  col.append(head, stats, add, body);
+  return col;
+}
+
+function renderTask(l, t) {
+  const row = el('div', 'task p' + t.prio + (t.done ? ' done' : ''));
+  row.draggable = !t.done;
+
+  const cb = el('input'); cb.type = 'checkbox'; cb.checked = t.done;
+  cb.title = t.done ? 'Remettre en cours' : 'Marquer comme terminée';
+  cb.onchange = () => toggleDone(l, t, row);
+
+  const pr = el('button', 'prio'); pr.title = `Priorité : ${PRIO[t.prio]} — cliquer pour changer`;
+  pr.onclick = () => { t.prio = (t.prio + 1) % 3; commit(); };
+
+  const tx = el('div', 'text'); tx.textContent = t.text;
+  if (!t.done) { tx.title = 'Cliquer pour modifier'; tx.onclick = () => startEdit(l, t, row, tx); }
+
+  const del = el('button', 'ibtn danger', ICON.x); del.title = 'Supprimer (annulable)';
+  del.onclick = () => deleteTask(l, t);
+
+  if (t.done) row.append(cb, tx, del); else row.append(cb, pr, tx, del);
+
+  row.addEventListener('dragstart', e => {
+    if (tx.isContentEditable) { e.preventDefault(); return; }
+    closePal();
+    drag = { type: 'task', listId: l.id, taskId: t.id };
+    e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', t.text);
+    requestAnimationFrame(() => row.classList.add('dragging'));
+  });
+  row.addEventListener('dragend', () => { row.classList.remove('dragging'); ph.remove(); drag = null; });
+  return row;
+}
+
+function startEdit(l, t, row, tx) {
+  if (tx.isContentEditable) return;
+  const orig = t.text;
+  row.draggable = false; makeEditable(tx); tx.focus(); caretEnd(tx);
+  tx.onkeydown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); tx.blur(); }
+    if (e.key === 'Escape') { tx.textContent = orig; tx.blur(); }
+  };
+  tx.onblur = () => {
+    tx.contentEditable = 'false'; row.draggable = true; tx.onblur = tx.onkeydown = null;
+    const v = tx.textContent.trim();
+    if (!v) { deleteTask(l, t); return; }
+    tx.textContent = v; if (v !== orig) { t.text = v; save(); }
+  };
+}
+
+/* ============ Glisser-déposer : aides ============ */
+function placePh(zone, y) {
+  const items = [...zone.querySelectorAll('.task:not(.dragging)')];
+  const after = items.find(it => { const r = it.getBoundingClientRect(); return y < r.top + r.height / 2; });
+  if (after) { if (after.previousSibling !== ph) zone.insertBefore(ph, after); }
+  else if (zone.lastChild !== ph) zone.append(ph);
+}
+function phIndex(zone) {
+  let i = 0;
+  for (const c of zone.children) {
+    if (c === ph) return i;
+    if (c.classList.contains('task') && !c.classList.contains('dragging')) i++;
+  }
+  return i;
+}
+// réordonner les colonnes en direct
+board.addEventListener('dragover', e => {
+  if (!drag || drag.type !== 'list') return;
+  e.preventDefault();
+  const src = drag.el;
+  const cols = [...board.querySelectorAll('.col')].filter(c => c !== src);
+  const after = cols.find(c => { const r = c.getBoundingClientRect(); return e.clientX < r.left + r.width / 2; });
+  const target = after || board.querySelector('.addcol');
+  if (target && src.nextSibling !== target) board.insertBefore(src, target);
+});
+board.addEventListener('drop', e => { if (drag && drag.type === 'list') e.preventDefault(); });
+// défilement automatique près des bords pendant un glisser
+document.addEventListener('dragover', e => {
+  if (!drag) return;
+  const r = board.getBoundingClientRect();
+  if (e.clientX < r.left + 70) board.scrollLeft -= 18;
+  else if (e.clientX > r.right - 70) board.scrollLeft += 18;
+});
+// molette = défilement horizontal quand on n'est pas dans une liste qui défile
+board.addEventListener('wheel', e => {
+  const b = e.target.closest('.body');
+  if (b && b.scrollHeight > b.clientHeight) return;
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { board.scrollLeft += e.deltaY; e.preventDefault(); }
+}, { passive: false });
+
+/* ============ Palette de couleurs ============ */
+function openPal(btn, l) {
+  pal.innerHTML = ''; pal.dataset.for = l.id;
+  COLORS.forEach(c => {
+    const s = el('button', 'sw' + (c === l.color ? ' on' : '')); s.style.background = c;
+    s.onclick = () => { l.color = c; closePal(); commit(); };
+    pal.append(s);
+  });
+  const r = btn.getBoundingClientRect();
+  pal.classList.add('open');
+  pal.style.top = (r.bottom + 6) + 'px';
+  pal.style.left = Math.min(r.left - 50, innerWidth - pal.offsetWidth - 10) + 'px';
+}
+function closePal() { pal.classList.remove('open'); pal.dataset.for = ''; }
+document.addEventListener('mousedown', e => { if (!pal.contains(e.target) && !e.target.closest('.colorbtn')) closePal(); });
+
+/* ============ En-tête : boutons & raccourcis ============ */
+$('#addList').onclick = newList;
+$('#btnExport').onclick = () => {
+  if (savePending) writeNow();
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = el('a'); a.href = URL.createObjectURL(blob);
+  a.download = `suidepro-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Sauvegarde téléchargée');
+};
+$('#btnImport').onclick = () => $('#fileImport').click();
+$('#fileImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!data || !data.tabs) throw new Error();
+    snapshot(); state = normalize(data); commit();
+    toast('Sauvegarde restaurée', true);
+  } catch { toast('Fichier non reconnu'); }
+};
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && ['1', '2', '3'].includes(e.key)) {
+    e.preventDefault(); if (document.activeElement) document.activeElement.blur();
+    state.activeTab = TABS[+e.key - 1].id; commit(); return;
+  }
+  if (isEditing()) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && undoSnap) { e.preventDefault(); undo(); }
+  if (e.altKey && e.key.toLowerCase() === 'n') { e.preventDefault(); newList(); }
+});
+
+/* ============ Démarrage ============ */
+(async function init() {
+  try {
+    db = await openDB();
+    state = normalize(await dbGet());
+  } catch (err) {
+    state = defaultState();
+    saveEl.textContent = '⚠ Stockage indisponible'; saveEl.className = 'err';
+  }
+  render();
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+})();
+</script>
+</body>
+</html>
